@@ -2,4 +2,5 @@
 
 ## How to use
 ```
+dotnet FluxToKoinly.dll <flux account address>
 ```

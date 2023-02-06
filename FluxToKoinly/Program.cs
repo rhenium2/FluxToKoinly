@@ -20,17 +20,27 @@ foreach (var transaction in transactions)
     var koinlyItem = new KoinlyItem
     {
         Date = UnixTimeStampToDateTime(transaction.Blocktime).ToString("yyyy-MM-dd HH:mm:ss"),
-        TxHash = transaction.Blockhash
+        TxHash = transaction.Txid
     };
 
-    var isReceived = transaction.Vout.Any(x => x.ScriptPubKey.Addresses.Any(a => a == accountId));
-    var vouts = transaction.Vout.FirstOrDefault(x => x.ScriptPubKey.Addresses.Any(a => a == accountId));
-    if (vouts is not null)
+    var vin = transaction.Vin.FirstOrDefault(x => x.Address == accountId);
+    var vout = transaction.Vout.FirstOrDefault(x => x.ScriptPubKey.Addresses.Any(a => a == accountId));
+    if (vin is not null)
     {
-        koinlyItem.ReceivedAmount = vouts.Value;
-        koinlyItem.ReceivedCurrency = "FLUX";
+        koinlyItem.SentAmount = vin.Value;
+    }
+    if (vout is not null)
+    {
+        koinlyItem.ReceivedAmount = vout.Value;
+    }
+
+    if (vin != null && vout != null && vin.Value == vout.Value)
+    {
+        koinlyItem.Label = "stake";
+    }
+    else
+    {
         koinlyItem.Label = "reward";
-        koinlyItem.Description = "reward";
     }
 
     csv.WriteRecord(koinlyItem);
